@@ -22,38 +22,39 @@ function toRoman(n) {
 }
 
 const ERA = {
-  bc:          { bg:"#b8b0a0", fg:"#1a1510", accent:"#5a5040", paperName:"Acta Diurna Populi Romani", motto:"SPQR · Senatus Populusque Romanus", edition:"Editio Matutina", price:"I Sestertius", footer:"Iussu Senatus Romani Inscriptum", font:"garam" },
-  ancient:     { bg:"#c8a96a", fg:"#1a0e00", accent:"#7a5a20", paperName:"Acta Diurna", motto:"Veritas · Aequitas · Pax", edition:"Editio Prima", price:"II Asses", footer:"Auctoritate Imperatoris Promulgatum", font:"garam" },
-  medieval:    { bg:"#e8dfc0", fg:"#1a1000", accent:"#6a5010", paperName:"Chronica Universalis", motto:"In Nomine Dei · Pro Fide et Regno", edition:"Charta Hebdomadalis", price:"I Denarius", footer:"Sub Sigillo Regis Scriptum", font:"garam" },
-  renaissance: { bg:"#e0d4b0", fg:"#120c00", accent:"#5a4010", paperName:"Gazette Extraordinaire", motto:"Scientia · Ars · Libertas", edition:"Folio Ordinario", price:"II Grossi", footer:"Cum Privilegio Principis Impressum", font:"garam" },
-  c18:         { bg:"#e8dfc8", fg:"#1a1008", accent:"#5a4a2a", paperName:"La Gazette de France", motto:"Veritas et Lux · Pro Republica", edition:"Numéro Ordinaire", price:"Prix: 2 Sols", footer:"Avec Privilege du Roy", font:"myeongjo" },
-  c19:         { bg:"#f0e6cc", fg:"#0d0d0d", accent:"#2a2a2a", paperName:"Le Moniteur Universel", motto:"LIBERTY · TRUTH · COMMERCE", edition:"Morning Edition", price:"Price: Threepence", footer:"Printed and Published by Authority", font:"myeongjo" },
-  c20:         { bg:"#f5f0e0", fg:"#111111", accent:"#555555", paperName:"The Daily Telegraph", motto:"ALL THE NEWS THAT'S FIT TO PRINT", edition:"Late Edition", price:"One Penny", footer:"Copyright Reserved", font:"myeongjo" },
+  bc:          { bg:"#b8b0a0", fg:"#1a1510", accent:"#5a5040", defaultPaper:"Acta Diurna Populi Romani", motto:"SPQR · Senatus Populusque Romanus", edition:"Editio Matutina", price:"I Sestertius", footer:"Iussu Senatus Romani Inscriptum", font:"garam" },
+  ancient:     { bg:"#c8a96a", fg:"#1a0e00", accent:"#7a5a20", defaultPaper:"Acta Diurna", motto:"Veritas · Aequitas · Pax", edition:"Editio Prima", price:"II Asses", footer:"Auctoritate Imperatoris Promulgatum", font:"garam" },
+  medieval:    { bg:"#e8dfc0", fg:"#1a1000", accent:"#6a5010", defaultPaper:"Chronica Universalis", motto:"In Nomine Dei · Pro Fide et Regno", edition:"Charta Hebdomadalis", price:"I Denarius", footer:"Sub Sigillo Regis Scriptum", font:"garam" },
+  renaissance: { bg:"#e0d4b0", fg:"#120c00", accent:"#5a4010", defaultPaper:"Gazette Extraordinaire", motto:"Scientia · Ars · Libertas", edition:"Folio Ordinario", price:"II Grossi", footer:"Cum Privilegio Principis Impressum", font:"garam" },
+  c18:         { bg:"#e8dfc8", fg:"#1a1008", accent:"#5a4a2a", defaultPaper:"La Gazette de France", motto:"Veritas et Lux · Pro Republica", edition:"Numéro Ordinaire", price:"Prix: 2 Sols", footer:"Avec Privilege du Roy", font:"myeongjo" },
+  c19:         { bg:"#f0e6cc", fg:"#0d0d0d", accent:"#2a2a2a", defaultPaper:"Le Moniteur Universel", motto:"LIBERTY · TRUTH · COMMERCE", edition:"Morning Edition", price:"Price: Threepence", footer:"Printed and Published by Authority", font:"myeongjo" },
+  c20:         { bg:"#f5f0e0", fg:"#111111", accent:"#555555", defaultPaper:"The Daily Telegraph", motto:"ALL THE NEWS THAT'S FIT TO PRINT", edition:"Late Edition", price:"One Penny", footer:"Copyright Reserved", font:"myeongjo" },
 };
 
 function formatDate(y, mo, d, era) {
   const RM = ["Ianuarius","Februarius","Martius","Aprilis","Maius","Iunius","Iulius","Augustus","September","October","November","December"];
   const FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
   const EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const KO = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
   const mi = mo - 1;
   const absY = Math.abs(y);
-  if (era === "bc") return `Die ${d} ${RM[mi]} ${toRoman(absY)} A.V.C. (${absY} B.C.)`;
-  if (era === "ancient" || era === "medieval") return `${d} ${RM[mi]} Anno Domini ${toRoman(y)}`;
-  if (era === "renaissance") return `Adi ${d} ${RM[mi]} ${y}`;
-  if (era === "c18") return `Le ${d} ${FR[mi]} ${y}`;
-  return `${EN[mi]} ${d}, ${y}`;
+  if (era === "bc") return `기원전 ${absY}년 ${KO[mi]} ${d}일`;
+  if (era === "ancient") return `${y}년 ${KO[mi]} ${d}일`;
+  if (era === "medieval") return `${y}년 ${KO[mi]} ${d}일`;
+  if (era === "renaissance") return `${y}년 ${KO[mi]} ${d}일`;
+  if (era === "c18") return `${y}년 ${KO[mi]} ${d}일`;
+  return `${y}년 ${KO[mi]} ${d}일`;
 }
 
 function wrapText(text, maxChars) {
-  const words = text.split(" ");
+  const chars = [...text];
   const lines = [];
   let current = "";
-  for (const w of words) {
-    const test = current ? current + " " + w : w;
-    if (test.length > maxChars) {
-      if (current) lines.push(current);
-      current = w;
-    } else current = test;
+  for (const c of chars) {
+    if (current.length >= maxChars) {
+      lines.push(current);
+      current = c;
+    } else current += c;
   }
   if (current) lines.push(current);
   return lines;
@@ -69,6 +70,7 @@ function buildSvg(params, myeongjoData, garamData) {
   const day = parseInt(pts[2]) || 1;
   const era = getEra(year);
   const e = ERA[era];
+  const paperName = params.paper || e.defaultPaper;
   const dateLabel = formatDate(year, month, day, era);
 
   const articles = [];
@@ -92,14 +94,14 @@ function buildSvg(params, myeongjoData, garamData) {
   const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
 
   y = 54;
-  txt(e.paperName, W/2, y, 34, "bold", e.fg, "middle");
+  txt(paperName, W/2, y, 30, "bold", e.fg, "middle");
   y += 8; line(y, 2);
   y += 14;
   txt(e.motto, PAD, y, 9, "normal", e.fg);
   txt(e.price, W-PAD, y, 9, "normal", e.fg, "end");
   y += 6; line(y, 1);
   y += 14;
-  txt(dateLabel, W/2, y, 10, "normal", e.fg, "middle");
+  txt(dateLabel, W/2, y, 11, "normal", e.fg, "middle");
   txt(e.edition, PAD, y, 9, "normal", e.fg);
   y += 6; line(y, 2);
   y += 22;
@@ -107,11 +109,11 @@ function buildSvg(params, myeongjoData, garamData) {
   const hSizes = [24, 17, 14];
   articles.forEach((a, i) => {
     if (i > 0) { y += 4; line(y, 1); y += 16; }
-    const hLines = wrapText(a.h, 48);
-    hLines.forEach(l => { txt(l, PAD, y, hSizes[i], "bold", e.fg); y += hSizes[i] + 4; });
+    const hLines = wrapText(a.h, 22);
+    hLines.forEach(l => { txt(l, PAD, y, hSizes[i], "bold", e.fg); y += hSizes[i] + 6; });
     if (a.b) {
-      const bLines = wrapText(a.b, 72);
-      bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 16; });
+      const bLines = wrapText(a.b, 34);
+      bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 17; });
       y += 4;
     }
   });
@@ -140,14 +142,14 @@ module.exports = async (req, res) => {
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const svg = buildSvg(req.query, myeongjoData, garamData);
     const resvg = new Resvg(svg, {
-  font: {
-    loadSystemFonts: false,
-    fontFiles: [
-      path.join(__dirname, "NanumMyeongjo.ttf"),
-      path.join(__dirname, "NanumGaram.ttf"),
-    ]
-  }
-});
+      font: {
+        loadSystemFonts: false,
+        fontFiles: [
+          path.join(__dirname, "NanumMyeongjo.ttf"),
+          path.join(__dirname, "NanumGaram.ttf"),
+        ]
+      }
+    });
     const png = resvg.render().asPng();
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "public, max-age=86400");
