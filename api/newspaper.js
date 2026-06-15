@@ -140,8 +140,14 @@ module.exports = async (req, res) => {
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const svg = buildSvg(req.query, myeongjoData, garamData);
     const resvg = new Resvg(svg, {
-      font: { loadSystemFonts: false }
-    });
+  font: {
+    loadSystemFonts: false,
+    fontFiles: [
+      path.join(__dirname, "NanumMyeongjo.ttf"),
+      path.join(__dirname, "NanumGaram.ttf"),
+    ]
+  }
+});
     const png = resvg.render().asPng();
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "public, max-age=86400");
