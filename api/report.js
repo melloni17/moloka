@@ -1,8 +1,13 @@
-const { createCanvas } = require('@napi-rs/canvas');
+const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
 const GIFEncoder = require('gif-encoder-2');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = async (req, res) => {
   try {
+    GlobalFonts.registerFromPath(path.join(__dirname, 'NanumMyeongjo.ttf'), 'NanumMyeongjo');
+    GlobalFonts.registerFromPath(path.join(__dirname, 'NotoSerif.ttf'), 'NotoSerif');
+
     const p = req.query;
     const W = 640, H = 520;
     const BG = '#1a1f2e';
@@ -29,8 +34,15 @@ module.exports = async (req, res) => {
     const canvas = createCanvas(W, H);
     const ctx = canvas.getContext('2d');
 
-    function wrapText(text, maxWidth) {
-      ctx.font = '11px monospace';
+    function getFont(text, size, bold = false) {
+      const hasKorean = /[가-힣]/.test(text);
+      const weight = bold ? 'bold ' : '';
+      const family = hasKorean ? 'NanumMyeongjo' : 'NotoSerif';
+      return `${weight}${size}px ${family}`;
+    }
+
+    function wrapText(text, maxWidth, size = 11) {
+      ctx.font = getFont(text, size);
       const words = text.split(' ');
       const lines = [];
       let current = '';
@@ -73,11 +85,12 @@ module.exports = async (req, res) => {
       ctx.fillRect(8, 8, W - 16, 46);
 
       // 헤더
-      ctx.font = 'bold 12px monospace';
+      ctx.font = getFont('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', 12, true);
       ctx.fillStyle = CYAN;
       ctx.textAlign = 'center';
       ctx.fillText('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', W / 2 + glitchX, 30);
-      ctx.font = '9px monospace';
+
+      ctx.font = getFont('서사 동결', 9);
       ctx.fillStyle = 'rgba(0,229,255,0.6)';
       ctx.fillText('⏸ 서사 동결 🧊 ➛ 데이터 추출 완료', W / 2, 46);
 
@@ -91,19 +104,22 @@ module.exports = async (req, res) => {
       let y = 72;
 
       function sectionTitle(title) {
-        ctx.font = 'bold 10px monospace';
+        ctx.font = getFont(title, 10, true);
         ctx.fillStyle = CYAN;
         ctx.textAlign = 'left';
         ctx.fillText(title, PAD, y);
-        y += 14;
+        y += 15;
       }
 
       function bodyText(text, color = WHITE, indent = 0) {
-        ctx.font = '10px monospace';
         ctx.fillStyle = color;
         ctx.textAlign = 'left';
-        const lines = wrapText(text, MAXW - indent);
-        lines.forEach(l => { ctx.fillText(l, PAD + indent, y); y += 13; });
+        const lines = wrapText(text, MAXW - indent, 10);
+        lines.forEach(l => {
+          ctx.font = getFont(l, 10);
+          ctx.fillText(l, PAD + indent, y);
+          y += 14;
+        });
       }
 
       function divider() {
@@ -113,21 +129,26 @@ module.exports = async (req, res) => {
         y += 10;
       }
 
+      function rightValue(label, value, color) {
+        ctx.font = getFont(label, 10, true);
+        ctx.fillStyle = CYAN;
+        ctx.textAlign = 'left';
+        ctx.fillText(label, PAD, y);
+        ctx.font = getFont(value, 12, true);
+        ctx.fillStyle = color;
+        ctx.textAlign = 'right';
+        ctx.fillText(value, W - PAD, y);
+        y += 16;
+        divider();
+      }
+
       // 타임라인
       sectionTitle('📜 변형 연대기');
       bodyText(timeline);
       y += 4; divider();
 
       // 인과 괴리율
-      ctx.font = 'bold 10px monospace';
-      ctx.fillStyle = CYAN;
-      ctx.textAlign = 'left';
-      ctx.fillText('⚖️ 인과 괴리율', PAD, y);
-      ctx.font = 'bold 12px monospace';
-      ctx.fillStyle = parseInt(gap) > 50 ? RED : YELLOW;
-      ctx.textAlign = 'right';
-      ctx.fillText(`${gap}%`, W - PAD, y);
-      y += 16; divider();
+      rightValue('⚖️ 인과 괴리율', `${gap}%`, parseInt(gap) > 50 ? RED : YELLOW);
 
       // 나비효과
       sectionTitle('🦋 나비효과 (10년후)');
@@ -135,22 +156,15 @@ module.exports = async (req, res) => {
       y += 4; divider();
 
       // 생존 위험
-      ctx.font = 'bold 10px monospace';
-      ctx.fillStyle = CYAN;
-      ctx.textAlign = 'left';
-      ctx.fillText('⚠️ 생존 위험', PAD, y);
-      ctx.font = 'bold 12px monospace';
-      ctx.fillStyle = parseInt(risk) > 50 ? RED : parseInt(risk) > 30 ? YELLOW : '#00ff88';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${risk}%`, W - PAD, y);
-      y += 16; divider();
+      rightValue('⚠️ 생존 위험', `${risk}%`,
+        parseInt(risk) > 50 ? RED : parseInt(risk) > 30 ? YELLOW : '#00ff88');
 
       // NPC 심리
       if (npcs.length > 0) {
         sectionTitle('🎭 개체 심리');
         npcs.forEach(npc => {
           ctx.fillStyle = 'rgba(0,229,255,0.6)';
-          ctx.font = '10px monospace';
+          ctx.font = getFont('▸', 10);
           ctx.textAlign = 'left';
           ctx.fillText('▸', PAD + 4, y);
           bodyText(npc, WHITE, 14);
@@ -158,7 +172,7 @@ module.exports = async (req, res) => {
       }
 
       // 푸터
-      ctx.font = '8px monospace';
+      ctx.font = getFont('시스템 재동기화', 8);
       ctx.fillStyle = 'rgba(0,229,255,0.4)';
       ctx.textAlign = 'center';
       ctx.fillText('시스템 재동기화. 현재 상태 유지.', W / 2, H - 18);
@@ -176,7 +190,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 20프레임 GIF
     for (let f = 0; f < 20; f++) {
       const glitchX = f % 6 === 0 ? (Math.random() - 0.5) * 5 : 0;
       const glitchLine = f % 4 === 0 ? Math.floor(Math.random() * H) : -1;
