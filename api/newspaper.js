@@ -33,6 +33,10 @@ function hasKorean(text) {
   return /[가-힣]/.test(text);
 }
 
+function hasCJK(text) {
+  return /[\u4E00-\u9FFF\u3400-\u4DBF\u3000-\u303F]/.test(text);
+}
+
 function wrapText(text, maxChars) {
   const words = text.split(" ");
   const lines = [];
@@ -48,7 +52,7 @@ function wrapText(text, maxChars) {
   return lines;
 }
 
-function buildSvg(params, myeongjoData, garamData, notoData) {
+function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   const dateStr = params.date || "1804-12-03";
   const isBC = dateStr.startsWith("-");
   const clean = isBC ? dateStr.slice(1) : dateStr;
@@ -71,19 +75,20 @@ function buildSvg(params, myeongjoData, garamData, notoData) {
   }
 
   const W = 640, PAD = 36;
-
-  // 시대별 기본 폰트
   const baseFontName = e.font === "garam" ? "NanumGaram" : "NanumMyeongjo";
   const baseFontData = e.font === "garam" ? garamData : myeongjoData;
-  const baseFontB64 = baseFontData.toString("base64");
-  const notoB64 = notoData.toString("base64");
 
   const els = [];
   let y = 0;
 
-  // 텍스트 내용에 따라 폰트 자동 선택
+  const getFontName = (text) => {
+    if (hasKorean(text)) return baseFontName;
+    if (hasCJK(text)) return "NotoSerifKO";
+    return "NotoSerif";
+  };
+
   const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
-    const fontName = hasKorean(text) ? baseFontName : "NotoSerif";
+    const fontName = getFontName(text);
     const escaped = String(text)
       .normalize("NFC")
       .replace(/&/g,"&amp;")
@@ -114,24 +119,20 @@ function buildSvg(params, myeongjoData, garamData, notoData) {
   articles.forEach((a, i) => {
     if (i > 0) { y += 4; line(y, 1); y += 16; }
 
-    // 원문 제목
     const hLines = wrapText(a.h, 44);
     hLines.forEach(l => { txt(l, PAD, y, hSizes[i], "bold", e.fg); y += hSizes[i] + 5; });
 
-    // 한글 번역 제목
     if (a.hk) {
       const hkLines = wrapText(`(${a.hk})`, 24);
       hkLines.forEach(l => { txt(l, PAD, y, hSizes[i]-3, "normal", e.fg, "start", 0.7); y += hSizes[i] + 1; });
       y += 4;
     }
 
-    // 원문 본문
     if (a.b) {
       const bLines = wrapText(a.b, 52);
       bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 16; });
     }
 
-    // 한글 번역 본문
     if (a.bk) {
       const bkLines = wrapText(`(${a.bk})`, 28);
       bkLines.forEach(l => { txt(l, PAD, y, 10, "normal", e.fg, "start", 0.65); y += 15; });
@@ -147,8 +148,9 @@ function buildSvg(params, myeongjoData, garamData, notoData) {
   <defs>
     <style>
       @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
-      @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontB64}"); }
-      @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoB64}"); }
+      @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
+      @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
+      @font-face { font-family: "NotoSerifKO"; src: url("data:font/truetype;base64,${notoKoData.toString("base64")}"); }
     </style>
   </defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
@@ -161,7 +163,8 @@ module.exports = async (req, res) => {
     const myeongjoData = fs.readFileSync(path.join(__dirname, "NanumMyeongjo.ttf"));
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const notoData = fs.readFileSync(path.join(__dirname, "NotoSerif.ttf"));
-    const svg = buildSvg(req.query, myeongjoData, garamData, notoData);
+    const notoKoData = fs.readFileSync(path.join(__dirname, "NotoSerif-ko.ttf"));
+    const svg = buildSvg(req.query, myeongjoData, garamData, notoData, notoKoData);
     const resvg = new Resvg(svg, {
       font: {
         loadSystemFonts: false,
@@ -169,6 +172,7 @@ module.exports = async (req, res) => {
           path.join(__dirname, "NanumMyeongjo.ttf"),
           path.join(__dirname, "NanumGaram.ttf"),
           path.join(__dirname, "NotoSerif.ttf"),
+          path.join(__dirname, "NotoSerif-ko.ttf"),
         ]
       }
     });
