@@ -12,15 +12,6 @@ function getEra(y) {
   return "c20";
 }
 
-function toRoman(n) {
-  if (n <= 0) return String(Math.abs(n));
-  const v = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
-  const s = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
-  let r = "";
-  for (let i = 0; i < v.length; i++) while (n >= v[i]) { r += s[i]; n -= v[i]; }
-  return r;
-}
-
 const ERA = {
   bc:          { bg:"#b8b0a0", fg:"#1a1510", accent:"#5a5040", defaultPaper:"Acta Diurna Populi Romani", motto:"SPQR · Senatus Populusque Romanus", edition:"Editio Matutina", price:"I Sestertius", footer:"Iussu Senatus Romani Inscriptum", font:"garam" },
   ancient:     { bg:"#c8a96a", fg:"#1a0e00", accent:"#7a5a20", defaultPaper:"Acta Diurna", motto:"Veritas · Aequitas · Pax", edition:"Editio Prima", price:"II Asses", footer:"Auctoritate Imperatoris Promulgatum", font:"garam" },
@@ -31,30 +22,23 @@ const ERA = {
   c20:         { bg:"#f5f0e0", fg:"#111111", accent:"#555555", defaultPaper:"The Daily Telegraph", motto:"ALL THE NEWS THAT'S FIT TO PRINT", edition:"Late Edition", price:"One Penny", footer:"Copyright Reserved", font:"myeongjo" },
 };
 
-function formatDate(y, mo, d, era) {
-  const RM = ["Ianuarius","Februarius","Martius","Aprilis","Maius","Iunius","Iulius","Augustus","September","October","November","December"];
-  const FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-  const EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function formatDate(y, mo, d) {
   const KO = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
-  const mi = mo - 1;
   const absY = Math.abs(y);
-  if (era === "bc") return `기원전 ${absY}년 ${KO[mi]} ${d}일`;
-  if (era === "ancient") return `${y}년 ${KO[mi]} ${d}일`;
-  if (era === "medieval") return `${y}년 ${KO[mi]} ${d}일`;
-  if (era === "renaissance") return `${y}년 ${KO[mi]} ${d}일`;
-  if (era === "c18") return `${y}년 ${KO[mi]} ${d}일`;
-  return `${y}년 ${KO[mi]} ${d}일`;
+  if (y <= 0) return `기원전 ${absY}년 ${KO[mo-1]} ${d}일`;
+  return `${y}년 ${KO[mo-1]} ${d}일`;
 }
 
 function wrapText(text, maxChars) {
-  const chars = [...text];
+  const words = text.split(" ");
   const lines = [];
   let current = "";
-  for (const c of chars) {
-    if (current.length >= maxChars) {
-      lines.push(current);
-      current = c;
-    } else current += c;
+  for (const w of words) {
+    const test = current ? current + " " + w : w;
+    if (test.length > maxChars) {
+      if (current) lines.push(current);
+      current = w;
+    } else current = test;
   }
   if (current) lines.push(current);
   return lines;
@@ -71,13 +55,15 @@ function buildSvg(params, myeongjoData, garamData) {
   const era = getEra(year);
   const e = ERA[era];
   const paperName = params.paper || e.defaultPaper;
-  const dateLabel = formatDate(year, month, day, era);
+  const dateLabel = formatDate(year, month, day);
 
   const articles = [];
   for (let i = 1; i <= 3; i++) {
     const h = params[`h${i}`];
+    const hk = params[`hk${i}`];
     const b = params[`b${i}`];
-    if (h) articles.push({ h, b: b || "" });
+    const bk = params[`bk${i}`];
+    if (h) articles.push({ h, hk: hk||"", b: b||"", bk: bk||"" });
   }
 
   const W = 640, PAD = 36;
@@ -88,13 +74,15 @@ function buildSvg(params, myeongjoData, garamData) {
   const els = [];
   let y = 0;
 
-  const txt = (text, x, yy, size, weight, fill, anchor="start") => {
-    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}">${String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>`);
+  const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
+    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>`);
   };
   const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
 
-  y = 54;
-  txt(paperName, W/2, y, 30, "bold", e.fg, "middle");
+  const paperFontSize = paperName.length > 25 ? 18 : paperName.length > 18 ? 22 : paperName.length > 12 ? 26 : 30;
+
+  y = 50;
+  txt(paperName, W/2, y, paperFontSize, "bold", e.fg, "middle");
   y += 8; line(y, 2);
   y += 14;
   txt(e.motto, PAD, y, 9, "normal", e.fg);
@@ -106,14 +94,31 @@ function buildSvg(params, myeongjoData, garamData) {
   y += 6; line(y, 2);
   y += 22;
 
-  const hSizes = [24, 17, 14];
+  const hSizes = [22, 16, 13];
   articles.forEach((a, i) => {
     if (i > 0) { y += 4; line(y, 1); y += 16; }
-    const hLines = wrapText(a.h, 22);
-    hLines.forEach(l => { txt(l, PAD, y, hSizes[i], "bold", e.fg); y += hSizes[i] + 6; });
+
+    // 원문 제목
+    const hLines = wrapText(a.h, 44);
+    hLines.forEach(l => { txt(l, PAD, y, hSizes[i], "bold", e.fg); y += hSizes[i] + 5; });
+
+    // 한글 번역 제목
+    if (a.hk) {
+      const hkLines = wrapText(`(${a.hk})`, 24);
+      hkLines.forEach(l => { txt(l, PAD, y, hSizes[i]-3, "normal", e.fg, "start", 0.7); y += hSizes[i] + 1; });
+      y += 4;
+    }
+
+    // 원문 본문
     if (a.b) {
-      const bLines = wrapText(a.b, 34);
-      bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 17; });
+      const bLines = wrapText(a.b, 52);
+      bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 16; });
+    }
+
+    // 한글 번역 본문
+    if (a.bk) {
+      const bkLines = wrapText(`(${a.bk})`, 28);
+      bkLines.forEach(l => { txt(l, PAD, y, 10, "normal", e.fg, "start", 0.65); y += 15; });
       y += 4;
     }
   });
