@@ -130,3 +130,10 @@ module.exports = async (req, res) => {
     const svg = buildSvg(params);
     const resvg = new Resvg(svg, { font: { loadSystemFonts: false } });
     const png = resvg.render().asPng();
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(png);
+  } catch (e) {
+    res.status(500).send("Error: " + e.message);
+  }
+};
