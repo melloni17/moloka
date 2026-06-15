@@ -74,8 +74,14 @@ function buildSvg(params, myeongjoData, garamData) {
   const els = [];
   let y = 0;
 
-  const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
-    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>`);
+const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
+    const escaped = String(text)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .normalize("NFC");
+    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${escaped}</text>`);
   };
   const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
 
