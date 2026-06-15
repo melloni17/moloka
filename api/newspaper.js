@@ -136,8 +136,8 @@ function buildSvg(params, myeongjoData, garamData) {
 
 module.exports = async (req, res) => {
   try {
-    const myeongjoData = fs.readFileSync(path.join(process.cwd(), "NanumMyeongjo.ttf"));
-    const garamData = fs.readFileSync(path.join(process.cwd(), "NanumGaram.ttf"));
+    const myeongjoData = fs.readFileSync(path.join(__dirname, "NanumMyeongjo.ttf"));
+    const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const svg = buildSvg(req.query, myeongjoData, garamData);
     const resvg = new Resvg(svg, {
       font: { loadSystemFonts: false }
