@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
     GlobalFonts.registerFromPath(path.join(__dirname, 'NotoSerif.ttf'), 'NotoSerif');
 
     const p = req.query;
-    const W = 640, H = 520;
+    const W = 680, H = 580;
     const BG = '#1a1f2e';
     const CYAN = '#00e5ff';
     const WHITE = '#e0f7fa';
@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
       return `${weight}${size}px ${family}`;
     }
 
-    function wrapText(text, maxWidth, size = 11) {
+    function wrapText(text, maxWidth, size = 13) {
       ctx.font = getFont(text, size);
       const words = text.split(' ');
       const lines = [];
@@ -58,7 +58,6 @@ module.exports = async (req, res) => {
     }
 
     function drawFrame(glitchX = 0, glitchLine = -1) {
-      // 배경
       ctx.fillStyle = BG;
       ctx.fillRect(0, 0, W, H);
 
@@ -82,43 +81,42 @@ module.exports = async (req, res) => {
 
       // 헤더 배경
       ctx.fillStyle = 'rgba(0,229,255,0.07)';
-      ctx.fillRect(8, 8, W - 16, 46);
+      ctx.fillRect(8, 8, W - 16, 52);
 
       // 헤더
-      ctx.font = getFont('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', 12, true);
+      ctx.font = getFont('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', 14, true);
       ctx.fillStyle = CYAN;
       ctx.textAlign = 'center';
-      ctx.fillText('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', W / 2 + glitchX, 30);
+      ctx.fillText('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', W / 2 + glitchX, 33);
 
-      ctx.font = getFont('서사 동결', 9);
+      ctx.font = getFont('서사 동결', 11);
       ctx.fillStyle = 'rgba(0,229,255,0.6)';
-      ctx.fillText('⏸ 서사 동결 🧊 ➛ 데이터 추출 완료', W / 2, 46);
+      ctx.fillText('[ NARRATIVE FROZEN ] DATA EXTRACTION COMPLETE', W / 2, 52);
 
-      // 구분선
       ctx.strokeStyle = 'rgba(0,229,255,0.35)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(16, 56); ctx.lineTo(W - 16, 56); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(16, 62); ctx.lineTo(W - 16, 62); ctx.stroke();
 
-      const PAD = 24;
+      const PAD = 28;
       const MAXW = W - PAD * 2;
-      let y = 72;
+      let y = 80;
 
       function sectionTitle(title) {
-        ctx.font = getFont(title, 10, true);
+        ctx.font = getFont(title, 12, true);
         ctx.fillStyle = CYAN;
         ctx.textAlign = 'left';
         ctx.fillText(title, PAD, y);
-        y += 15;
+        y += 17;
       }
 
       function bodyText(text, color = WHITE, indent = 0) {
         ctx.fillStyle = color;
         ctx.textAlign = 'left';
-        const lines = wrapText(text, MAXW - indent, 10);
+        const lines = wrapText(text, MAXW - indent, 12);
         lines.forEach(l => {
-          ctx.font = getFont(l, 10);
+          ctx.font = getFont(l, 12);
           ctx.fillText(l, PAD + indent, y);
-          y += 14;
+          y += 16;
         });
       }
 
@@ -126,60 +124,60 @@ module.exports = async (req, res) => {
         ctx.strokeStyle = 'rgba(0,229,255,0.18)';
         ctx.lineWidth = 0.5;
         ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
-        y += 10;
+        y += 12;
       }
 
       function rightValue(label, value, color) {
-        ctx.font = getFont(label, 10, true);
+        ctx.font = getFont(label, 12, true);
         ctx.fillStyle = CYAN;
         ctx.textAlign = 'left';
         ctx.fillText(label, PAD, y);
-        ctx.font = getFont(value, 12, true);
+        ctx.font = getFont(value, 14, true);
         ctx.fillStyle = color;
         ctx.textAlign = 'right';
         ctx.fillText(value, W - PAD, y);
-        y += 16;
+        y += 18;
         divider();
       }
 
       // 타임라인
-      sectionTitle('📜 변형 연대기');
+      sectionTitle('[TIMELINE] 변형 연대기');
       bodyText(timeline);
       y += 4; divider();
 
       // 인과 괴리율
-      rightValue('⚖️ 인과 괴리율', `${gap}%`, parseInt(gap) > 50 ? RED : YELLOW);
+      rightValue('[CAUSALITY] 인과 괴리율', `${gap}%`, parseInt(gap) > 50 ? RED : YELLOW);
 
       // 나비효과
-      sectionTitle('🦋 나비효과 (10년후)');
+      sectionTitle('[BUTTERFLY] 나비효과 10년후');
       bodyText(butterfly);
       y += 4; divider();
 
       // 생존 위험
-      rightValue('⚠️ 생존 위험', `${risk}%`,
+      rightValue('[RISK] 생존 위험', `${risk}%`,
         parseInt(risk) > 50 ? RED : parseInt(risk) > 30 ? YELLOW : '#00ff88');
 
       // NPC 심리
       if (npcs.length > 0) {
-        sectionTitle('🎭 개체 심리');
+        sectionTitle('[PSYCH] 개체 심리');
         npcs.forEach(npc => {
           ctx.fillStyle = 'rgba(0,229,255,0.6)';
-          ctx.font = getFont('▸', 10);
+          ctx.font = getFont('>', 12);
           ctx.textAlign = 'left';
-          ctx.fillText('▸', PAD + 4, y);
-          bodyText(npc, WHITE, 14);
+          ctx.fillText('>', PAD + 4, y);
+          bodyText(npc, WHITE, 16);
         });
       }
 
       // 푸터
-      ctx.font = getFont('시스템 재동기화', 8);
+      ctx.font = getFont('시스템 재동기화', 10);
       ctx.fillStyle = 'rgba(0,229,255,0.4)';
       ctx.textAlign = 'center';
-      ctx.fillText('시스템 재동기화. 현재 상태 유지.', W / 2, H - 18);
+      ctx.fillText('[ SYSTEM RESYNC COMPLETE / 현재 상태 유지 ]', W / 2, H - 18);
 
       // 코너 장식
       [[16,16],[W-16,16],[16,H-16],[W-16,H-16]].forEach(([cx, cy]) => {
-        const s = 8, dx = cx < W/2 ? 1 : -1, dy = cy < H/2 ? 1 : -1;
+        const s = 10, dx = cx < W/2 ? 1 : -1, dy = cy < H/2 ? 1 : -1;
         ctx.strokeStyle = CYAN;
         ctx.lineWidth = 1;
         ctx.beginPath();
