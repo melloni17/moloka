@@ -29,9 +29,13 @@ module.exports = async (req, res) => {
     const risk = p.risk || '0';
     const risknet = p.risknet || '';
     const riskreason = p.riskreason || '';
+
     const npcs = [];
     for (let i = 1; i <= 5; i++) {
-      if (p[`npc${i}`]) npcs.push(p[`npc${i}`]);
+      const name = p[`npc${i}name`];
+      const psych = p[`npc${i}psych`];
+      const eval_ = p[`npc${i}eval`];
+      if (name) npcs.push({ name, psych: psych||'', eval: eval_||'' });
     }
 
     const PAD = 28;
@@ -78,8 +82,12 @@ module.exports = async (req, res) => {
     calcY += 12;
     if (npcs.length > 0) {
       calcY += 17;
-      npcs.forEach(npc => { calcY += measureLines(tmpCtx, npc, MAXW - 16, 12).length * 16; });
-      calcY += 8;
+      npcs.forEach(npc => {
+        calcY += 16; // 이름
+        if (npc.psych) calcY += measureLines(tmpCtx, npc.psych, MAXW - 24, 11).length * 15;
+        if (npc.eval) calcY += measureLines(tmpCtx, npc.eval, MAXW - 24, 11).length * 15 + 6;
+        calcY += 8;
+      });
     }
     calcY += 36;
     const H = Math.max(calcY, 280);
@@ -113,17 +121,14 @@ module.exports = async (req, res) => {
       ctx.fillStyle = BG;
       ctx.fillRect(0, 0, W, H);
 
-      // 스캔라인
       ctx.fillStyle = 'rgba(0,0,0,0.08)';
       for (let sy = 0; sy < H; sy += 3) ctx.fillRect(0, sy, W, 1);
 
-      // 글리치 라인
       if (glitchLine > 0) {
         ctx.fillStyle = 'rgba(94,234,212,0.1)';
         ctx.fillRect(0, glitchLine, W, 2);
       }
 
-      // 외곽 테두리
       ctx.strokeStyle = CYAN_BORDER;
       ctx.lineWidth = 1.5;
       ctx.strokeRect(8, 8, W - 16, H - 16);
@@ -131,11 +136,9 @@ module.exports = async (req, res) => {
       ctx.lineWidth = 0.5;
       ctx.strokeRect(12, 12, W - 24, H - 24);
 
-      // 헤더 배경
       ctx.fillStyle = 'rgba(94,234,212,0.06)';
       ctx.fillRect(8, 8, W - 16, 52);
 
-      // 헤더
       ctx.font = getFont('[ADMIN: CAUSALITY DIAGNOSIS REPORT]', 14, true);
       ctx.fillStyle = CYAN;
       ctx.textAlign = 'center';
@@ -237,11 +240,24 @@ module.exports = async (req, res) => {
       if (npcs.length > 0) {
         sectionTitle('[PSYCH] 개체 심리');
         npcs.forEach(npc => {
-          ctx.fillStyle = CYAN_DIM;
-          ctx.font = getFont('>', 12);
+          // 이름
+          ctx.font = getFont(npc.name, 12, true);
+          ctx.fillStyle = CYAN;
           ctx.textAlign = 'left';
-          ctx.fillText('>', PAD + 4, y);
-          bodyText(npc, WHITE, 16);
+          ctx.fillText(`> ${npc.name}`, PAD + 4, y);
+          y += 16;
+
+          // 심리
+          if (npc.psych) {
+            bodyText(`심리: ${npc.psych}`, WHITE, 16, 11);
+          }
+
+          // 관리자 평가
+          if (npc.eval) {
+            bodyText(`평가: ${npc.eval}`, 'rgba(94,234,212,0.75)', 16, 11);
+            y += 6;
+          }
+          y += 2;
         });
       }
 
