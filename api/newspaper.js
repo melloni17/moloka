@@ -29,6 +29,10 @@ function formatDate(y, mo, d) {
   return `${y}년 ${KO[mo-1]} ${d}일`;
 }
 
+function hasKorean(text) {
+  return /[가-힣]/.test(text);
+}
+
 function wrapText(text, maxChars) {
   const words = text.split(" ");
   const lines = [];
@@ -44,7 +48,7 @@ function wrapText(text, maxChars) {
   return lines;
 }
 
-function buildSvg(params, myeongjoData, garamData) {
+function buildSvg(params, myeongjoData, garamData, notoData) {
   const dateStr = params.date || "1804-12-03";
   const isBC = dateStr.startsWith("-");
   const clean = isBC ? dateStr.slice(1) : dateStr;
@@ -67,22 +71,28 @@ function buildSvg(params, myeongjoData, garamData) {
   }
 
   const W = 640, PAD = 36;
-  const fontData = e.font === "garam" ? garamData : myeongjoData;
-  const fontB64 = fontData.toString("base64");
-  const fontName = e.font === "garam" ? "NanumGaram" : "NanumMyeongjo";
+
+  // 시대별 기본 폰트
+  const baseFontName = e.font === "garam" ? "NanumGaram" : "NanumMyeongjo";
+  const baseFontData = e.font === "garam" ? garamData : myeongjoData;
+  const baseFontB64 = baseFontData.toString("base64");
+  const notoB64 = notoData.toString("base64");
 
   const els = [];
   let y = 0;
 
-const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
+  // 텍스트 내용에 따라 폰트 자동 선택
+  const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
+    const fontName = hasKorean(text) ? baseFontName : "NotoSerif";
     const escaped = String(text)
+      .normalize("NFC")
       .replace(/&/g,"&amp;")
       .replace(/</g,"&lt;")
       .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .normalize("NFC");
+      .replace(/"/g,"&quot;");
     els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${escaped}</text>`);
   };
+
   const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
 
   const paperFontSize = paperName.length > 25 ? 18 : paperName.length > 18 ? 22 : paperName.length > 12 ? 26 : 30;
@@ -136,10 +146,9 @@ const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${y}">
   <defs>
     <style>
-      @font-face {
-        font-family: "${fontName}";
-        src: url("data:font/truetype;base64,${fontB64}");
-      }
+      @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
+      @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontB64}"); }
+      @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoB64}"); }
     </style>
   </defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
@@ -151,13 +160,15 @@ module.exports = async (req, res) => {
   try {
     const myeongjoData = fs.readFileSync(path.join(__dirname, "NanumMyeongjo.ttf"));
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
-    const svg = buildSvg(req.query, myeongjoData, garamData);
+    const notoData = fs.readFileSync(path.join(__dirname, "NotoSerif.ttf"));
+    const svg = buildSvg(req.query, myeongjoData, garamData, notoData);
     const resvg = new Resvg(svg, {
       font: {
         loadSystemFonts: false,
         fontFiles: [
           path.join(__dirname, "NanumMyeongjo.ttf"),
           path.join(__dirname, "NanumGaram.ttf"),
+          path.join(__dirname, "NotoSerif.ttf"),
         ]
       }
     });
