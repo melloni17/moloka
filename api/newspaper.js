@@ -1,4 +1,4 @@
-const { createCanvas } = require('@napi-rs/canvas');
+const { Resvg } = require('@resvg/resvg-js');
 const fs = require('fs');
 const path = require('path');
 
