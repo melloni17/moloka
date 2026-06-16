@@ -56,6 +56,11 @@ function wrapText(text, maxChars) {
   return lines;
 }
 
+function esc(text) {
+  return String(text).normalize("NFC")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
 function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   const dateStr = params.date || "1804-12-03";
   const isBC = dateStr.startsWith("-");
@@ -93,9 +98,17 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
 
   const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
     const fontName = getFontName(text);
-    const escaped = String(text).normalize("NFC")
-      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${escaped}</text>`);
+    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${esc(text)}</text>`);
+  };
+
+  // 원본 텍스트 기준으로 폰트 고정 후 줄바꿈 출력
+  const txtLines = (originalText, lines, x, yy, size, weight, fill, anchor="start", opacity=1) => {
+    const fontName = getFontName(originalText);
+    lines.forEach(l => {
+      els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${esc(l)}</text>`);
+      yy += size + 5;
+    });
+    return yy;
   };
 
   const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
@@ -117,20 +130,44 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
 
   articles.forEach((a, i) => {
     if (i > 0) { y += 4; line(y, 1); y += 16; }
+
+    // 헤드라인 — 원본 기준 폰트 고정
     const hLines = wrapText(a.h, 44);
-    hLines.forEach(l => { txt(l, PAD, y, hSizes[i], hWeights[i], e.fg); y += hSizes[i] + 5; });
+    const hFont = getFontName(a.h);
+    hLines.forEach(l => {
+      els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]}" font-weight="${hWeights[i]}" fill="${e.fg}" text-anchor="start" font-family="${hFont}">${esc(l)}</text>`);
+      y += hSizes[i] + 5;
+    });
+
+    // 한글 번역 제목
     if (a.hk) {
       const hkLines = wrapText(`(${a.hk})`, 24);
-      hkLines.forEach(l => { txt(l, PAD, y, hSizes[i]-3, "normal", e.fg, "start", 0.7); y += hSizes[i] + 1; });
+      const hkFont = getFontName(a.hk);
+      hkLines.forEach(l => {
+        els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]-3}" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${hkFont}" opacity="0.7">${esc(l)}</text>`);
+        y += hSizes[i] + 1;
+      });
       y += 4;
     }
+
+    // 원문 본문 — 원본 기준 폰트 고정
     if (a.b) {
       const bLines = wrapText(a.b, 52);
-      bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 16; });
+      const bFont = getFontName(a.b);
+      bLines.forEach(l => {
+        els.push(`<text x="${PAD}" y="${y}" font-size="11" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${bFont}">${esc(l)}</text>`);
+        y += 16;
+      });
     }
+
+    // 한글 번역 본문
     if (a.bk) {
       const bkLines = wrapText(`(${a.bk})`, 28);
-      bkLines.forEach(l => { txt(l, PAD, y, 10, "normal", e.fg, "start", 0.65); y += 15; });
+      const bkFont = getFontName(a.bk);
+      bkLines.forEach(l => {
+        els.push(`<text x="${PAD}" y="${y}" font-size="10" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${bkFont}" opacity="0.65">${esc(l)}</text>`);
+        y += 15;
+      });
       y += 4;
     }
   });
