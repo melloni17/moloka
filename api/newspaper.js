@@ -167,7 +167,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkData) {
     @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
     @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
     @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
-    @font-face { font-family: "NotoSerifCJK"; src: url("data:font/opentype;base64,${cjkData.toString("base64")}"); }
+    @font-face { font-family: "NotoSerifCJK"; src: url("data:font/truetype;base64,${cjkData.toString("base64")}"); }
   </style></defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
   ${els.join("\n  ")}
@@ -179,7 +179,7 @@ module.exports = async (req, res) => {
     const myeongjoData = fs.readFileSync(path.join(__dirname, "NanumMyeongjo.ttf"));
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const notoData = fs.readFileSync(path.join(__dirname, "NotoSerif.ttf"));
-    const cjkData = fs.readFileSync(path.join(__dirname, "NotoSerifCJKjp-Regular.otf"));
+    const cjkData = fs.readFileSync(path.join(__dirname, "NotoSerifCJKjp-Regular.ttf"));
     const svg = buildSvg(req.query, myeongjoData, garamData, notoData, cjkData);
     const resvg = new Resvg(svg, {
       font: {
@@ -188,7 +188,7 @@ module.exports = async (req, res) => {
           path.join(__dirname, "NanumMyeongjo.ttf"),
           path.join(__dirname, "NanumGaram.ttf"),
           path.join(__dirname, "NotoSerif.ttf"),
-          path.join(__dirname, "NotoSerifCJKjp-Regular.otf"),
+          path.join(__dirname, "NotoSerifCJKjp-Regular.ttf"),
         ]
       }
     });
