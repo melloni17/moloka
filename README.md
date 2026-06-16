@@ -215,7 +215,7 @@ sectionTitle('[RISK] 생존 위험');
 sectionTitle('[PSYCH] 개체 심리');
 ```
 
-원하는 텍스트로 교체하면 돼.
+원하는 텍스트로 교체하면 됩니다.
 
 ### 리포트 퍼센트 항목 변경
 `api/report.js` 에서 아래 부분 찾아서 수정:
@@ -225,11 +225,32 @@ rightValue('[CAUSALITY] 인과 괴리율', `${gap}%`, ...);
 rightValue('[RISK] 생존 위험', `${risk}%`, ...);
 ```
 
+### 리포트 퍼센트 항목 제거
+`api/report.js` 에서 아래 줄 삭제:
+
+```javascript
+// 인과 괴리율 퍼센트 제거 시 이 줄 삭제
+rightValue('[CAUSALITY] 인과 괴리율', `${gap}%`, parseInt(gap) > 50 ? RED : YELLOW);
+
+// 생존 위험 퍼센트 제거 시 이 줄 삭제
+rightValue('[RISK] 생존 위험', `${risk}%`,
+  parseInt(risk) > 50 ? RED : parseInt(risk) > 30 ? YELLOW : GREEN);
+
+// 순위험 제거 시 이 블록 삭제
+if (risknet) {
+  ctx.fillText('자원 차감 후 순위험', ...);
+  ctx.fillText(`${risknet}%`, ...);
+  y += 16;
+}
+```
+
+삭제 후 해당 파라미터(`gap`, `risk`, `risknet`)는 URL에 안 넣어도 됩니다.
+
 ### NPC 심리/평가 레이블 변경
 ```javascript
 bodyText(`심리: ${npc.psych}`, WHITE, 16, 11);
 bodyText(`평가: ${npc.eval}`, ...);
 ```
 
-`심리:` 와 `평가:` 를 원하는 텍스트로 교체하면 돼.
+`심리:` 와 `평가:` 를 원하는 텍스트로 교체하면 됩니다.
 
