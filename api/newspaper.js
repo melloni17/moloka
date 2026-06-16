@@ -61,7 +61,7 @@ function esc(text) {
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-function buildSvg(params, myeongjoData, garamData, notoData, cjkData) {
+function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScData) {
   const dateStr = params.date || "1804-12-03";
   const isBC = dateStr.startsWith("-");
   const clean = isBC ? dateStr.slice(1) : dateStr;
@@ -73,6 +73,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkData) {
   const e = ERA[era];
   const paperName = params.paper || e.defaultPaper;
   const price = params.price || e.price;
+  const lang = params.lang || "ja";
   const dateLabel = formatDate(year, month, day);
 
   const articles = [];
@@ -90,8 +91,10 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkData) {
   const els = [];
   let y = 0;
 
+  const getCJKFont = () => lang === "zh" ? "NotoSerifSC" : "NotoSerifJP";
+
   const getFontName = (text) => {
-    if (hasCJK(text)) return "NotoSerifCJK";
+    if (hasCJK(text)) return getCJKFont();
     if (hasKorean(text)) return baseFontName;
     return "NotoSerif";
   };
@@ -167,7 +170,8 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkData) {
     @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
     @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
     @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
-    @font-face { font-family: "NotoSerifCJK"; src: url("data:font/truetype;base64,${cjkData.toString("base64")}"); }
+    @font-face { font-family: "NotoSerifJP"; src: url("data:font/truetype;base64,${cjkJpData.toString("base64")}"); }
+    @font-face { font-family: "NotoSerifSC"; src: url("data:font/truetype;base64,${cjkScData.toString("base64")}"); }
   </style></defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
   ${els.join("\n  ")}
@@ -179,8 +183,9 @@ module.exports = async (req, res) => {
     const myeongjoData = fs.readFileSync(path.join(__dirname, "NanumMyeongjo.ttf"));
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const notoData = fs.readFileSync(path.join(__dirname, "NotoSerif.ttf"));
-    const cjkData = fs.readFileSync(path.join(__dirname, "NotoSerifCJKjp-Regular.ttf"));
-    const svg = buildSvg(req.query, myeongjoData, garamData, notoData, cjkData);
+    const cjkJpData = fs.readFileSync(path.join(__dirname, "NotoSerifJP-VariableFont_wght.ttf"));
+    const cjkScData = fs.readFileSync(path.join(__dirname, "NotoSerifSC-VariableFont_wght.ttf"));
+    const svg = buildSvg(req.query, myeongjoData, garamData, notoData, cjkJpData, cjkScData);
     const resvg = new Resvg(svg, {
       font: {
         loadSystemFonts: false,
@@ -188,7 +193,8 @@ module.exports = async (req, res) => {
           path.join(__dirname, "NanumMyeongjo.ttf"),
           path.join(__dirname, "NanumGaram.ttf"),
           path.join(__dirname, "NotoSerif.ttf"),
-          path.join(__dirname, "NotoSerifCJKjp-Regular.ttf"),
+          path.join(__dirname, "NotoSerifJP-VariableFont_wght.ttf"),
+          path.join(__dirname, "NotoSerifSC-VariableFont_wght.ttf"),
         ]
       }
     });
