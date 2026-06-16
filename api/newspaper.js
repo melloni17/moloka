@@ -61,16 +61,6 @@ function esc(text) {
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-function stoneEdge(W, H) {
-  // 불규칙한 돌 테두리
-  return `<path d="
-    M 18 22 Q 25 18 35 20 Q 150 14 300 16 Q 450 14 580 18 Q 610 19 622 25
-    Q 628 40 626 100 Q 630 200 628 ${H*0.5} Q 632 ${H*0.7} 626 ${H-30}
-    Q 622 ${H-18} 610 ${H-15} Q 500 ${H-10} 320 ${H-12} Q 150 ${H-8} 40 ${H-14}
-    Q 20 ${H-18} 15 ${H-28} Q 10 ${H*0.7} 12 ${H*0.5} Q 8 300 12 150 Q 10 60 18 22 Z
-  " fill="#7a7670" stroke="#5a5448" stroke-width="2"/>`;
-}
-
 function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScData) {
   const dateStr = params.date || "1804-12-03";
   const isBC = dateStr.startsWith("-");
@@ -111,7 +101,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
 
   const stoneFilter = isStone ? ` filter="url(#engrave)"` : "";
   const textColor = isStone ? "#e8e0d0" : e.fg;
-  const accentColor = isStone ? "rgba(230,220,200,0.4)" : e.accent;
+  const accentColor = isStone ? "rgba(230,220,200,0.35)" : e.accent;
 
   const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
     const fontName = getFontName(text);
@@ -183,28 +173,32 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
 
   const stoneDefs = isStone ? `
     <filter id="engrave" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="2" dy="2" stdDeviation="1" flood-color="rgba(0,0,0,0.8)"/>
-      <feDropShadow dx="-1.5" dy="-1.5" stdDeviation="0.8" flood-color="rgba(255,255,255,0.35)"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="0.5" flood-color="rgba(0,0,0,0.4)"/>
+      <feDropShadow dx="2.5" dy="2.5" stdDeviation="1" flood-color="rgba(0,0,0,0.9)"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="1" flood-color="rgba(255,255,255,0.4)"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="0.8" flood-color="rgba(0,0,0,0.5)"/>
     </filter>
-    <radialGradient id="stoneSpot1" cx="20%" cy="30%" r="40%">
-      <stop offset="0%" style="stop-color:#8a8278;stop-opacity:0.6"/>
+    <radialGradient id="spot1" cx="15%" cy="20%" r="45%">
+      <stop offset="0%" style="stop-color:#8a8278;stop-opacity:0.7"/>
       <stop offset="100%" style="stop-color:#7a7670;stop-opacity:0"/>
     </radialGradient>
-    <radialGradient id="stoneSpot2" cx="80%" cy="70%" r="35%">
+    <radialGradient id="spot2" cx="85%" cy="75%" r="40%">
+      <stop offset="0%" style="stop-color:#5a5450;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#7a7670;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="spot3" cx="55%" cy="15%" r="35%">
+      <stop offset="0%" style="stop-color:#9a9288;stop-opacity:0.5"/>
+      <stop offset="100%" style="stop-color:#7a7670;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="spot4" cx="30%" cy="85%" r="30%">
       <stop offset="0%" style="stop-color:#6a6460;stop-opacity:0.5"/>
-      <stop offset="100%" style="stop-color:#7a7670;stop-opacity:0"/>
-    </radialGradient>
-    <radialGradient id="stoneSpot3" cx="50%" cy="20%" r="30%">
-      <stop offset="0%" style="stop-color:#9a9288;stop-opacity:0.4"/>
       <stop offset="100%" style="stop-color:#7a7670;stop-opacity:0"/>
     </radialGradient>` : "";
 
   const stoneOverlay = isStone ? `
-    ${stoneEdge(W, y)}
-    <rect width="${W}" height="${y}" fill="url(#stoneSpot1)"/>
-    <rect width="${W}" height="${y}" fill="url(#stoneSpot2)"/>
-    <rect width="${W}" height="${y}" fill="url(#stoneSpot3)"/>` : "";
+    <rect width="${W}" height="${y}" fill="url(#spot1)"/>
+    <rect width="${W}" height="${y}" fill="url(#spot2)"/>
+    <rect width="${W}" height="${y}" fill="url(#spot3)"/>
+    <rect width="${W}" height="${y}" fill="url(#spot4)"/>` : "";
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${y}">
   <defs>
