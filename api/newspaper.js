@@ -110,7 +110,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
     y += 8; line(y, 2);
     y += 14;
     txt(e.motto, PAD, y, 9, "normal", e.fg);
-    txt(prio"e d
+    txt(price, W-PAD, y, 9, "normal", e.fg, "end");
        i1; =; , 1,d)
   x(t"mf;6iy yc is=2 tWeights = [era==="c19"?"900":"bold","boli.5 s, 1na gy ; }  cre({b`Lo(P "a,05 4}
 ;itel. 2 t/.0"={" dy
