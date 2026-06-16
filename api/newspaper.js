@@ -28,7 +28,7 @@ const ERA = {
   renaissance: { bg:"#e0d4b0", fg:"#120c00", accent:"#5a4010", defaultPaper:"Gazette Extraordinaire", motto:"Scientia · Ars · Libertas", edition:"Folio Ordinario", price:"II Grossi", footer:"Cum Privilegio Principis Impressum", font:"garam" },
   c18:         { bg:"#e8dfc8", fg:"#1a1008", accent:"#5a4a2a", defaultPaper:"La Gazette de France", motto:"Veritas et Lux · Pro Republica", edition:"Numéro Ordinaire", price:"Prix: 2 Sols", footer:"Avec Privilege du Roy", font:"myeongjo" },
   c19:         { bg:"#f0e6cc", fg:"#0d0d0d", accent:"#2a2a2a", defaultPaper:"Le Moniteur Universel", motto:"LIBERTY · TRUTH · COMMERCE", edition:"Morning Edition", price:"Price: Threepence", footer:"Printed and Published by Authority", font:"myeongjo" },
-  c20:         { bg:"#f5f0e0", fg:"#111111", accent:"#555555", defaultPaper:"The Daily Telegraph", motto:"ALL THE NEWS THAT'S FIT TO PRINT", edition:"Late Edition", price:"One Penny", footer:"Copyright Reserved", font:"myeongjo" },
+  c20:         { bg:"#e8e8e4", fg:"#1a1a1a", accent:"#444444", defaultPaper:"The Daily Telegraph", motto:"ALL THE NEWS THAT'S FIT TO PRINT", edition:"Late Edition", price:"One Penny", footer:"Copyright Reserved", font:"myeongjo" },
 };
 
 function formatDate(y, mo, d) {
