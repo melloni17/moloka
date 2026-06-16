@@ -32,7 +32,7 @@
 ## 🚀 배포 방법
 
 ### 1. GitHub Fork
-이 레포지토리를 Fork합니다.
+이 레포지토리를 Fork합니다.(우측 상단 즈음에 있음)
 
 ### 2. Vercel 연동
 1. [vercel.com](https://vercel.com) 가입 (GitHub 계정으로 로그인)
