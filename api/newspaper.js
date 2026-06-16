@@ -22,7 +22,7 @@ function toRoman(n) {
 }
 
 const ERA = {
-  bc:          { bg:"#9a9288", fg:"#1a1510", accent:"#5a5040", defaultPaper:"Acta Diurna Populi Romani", motto:"SPQR · Senatus Populusque Romanus", edition:"Editio Matutina", price:"I Sestertius", footer:"Iussu Senatus Romani Inscriptum", font:"garam" },
+  bc:          { bg:"#7a7670", fg:"#1a1510", accent:"#3a3428", defaultPaper:"Acta Diurna Populi Romani", motto:"SPQR · Senatus Populusque Romanus", edition:"Editio Matutina", price:"I Sestertius", footer:"Iussu Senatus Romani Inscriptum", font:"garam" },
   ancient:     { bg:"#c8a96a", fg:"#1a0e00", accent:"#7a5a20", defaultPaper:"Acta Diurna", motto:"Veritas · Aequitas · Pax", edition:"Editio Prima", price:"II Asses", footer:"Auctoritate Imperatoris Promulgatum", font:"garam" },
   medieval:    { bg:"#e8dfc0", fg:"#1a1000", accent:"#6a5010", defaultPaper:"Chronica Universalis", motto:"In Nomine Dei · Pro Fide et Regno", edition:"Charta Hebdomadalis", price:"I Denarius", footer:"Sub Sigillo Regis Scriptum", font:"garam" },
   renaissance: { bg:"#e0d4b0", fg:"#120c00", accent:"#5a4010", defaultPaper:"Gazette Extraordinaire", motto:"Scientia · Ars · Libertas", edition:"Folio Ordinario", price:"II Grossi", footer:"Cum Privilegio Principis Impressum", font:"garam" },
@@ -61,18 +61,16 @@ function esc(text) {
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-// 돌 균열 SVG 패스 생성
 function stoneCracks(W, H) {
   const cracks = [
-    `M 45 80 Q 60 95 52 120 Q 48 140 58 160`,
-    `M ${W-80} 60 Q ${W-65} 80 ${W-72} 110 Q ${W-78} 130 ${W-68} 155`,
-    `M 120 ${H-60} Q 140 ${H-45} 135 ${H-25}`,
-    `M ${W-150} ${H-70} Q ${W-130} ${H-50} ${W-140} ${H-30}`,
-    `M 200 40 Q 215 55 210 75`,
-    `M ${W/2-30} ${H-40} Q ${W/2} ${H-25} ${W/2+20} ${H-35}`,
+    `M 30 ${H*0.15} Q 55 ${H*0.2} 48 ${H*0.35} Q 42 ${H*0.45} 50 ${H*0.55}`,
+    `M ${W-50} ${H*0.1} Q ${W-30} ${H*0.25} ${W-40} ${H*0.4}`,
+    `M ${W*0.3} ${H-30} Q ${W*0.35} ${H-15} ${W*0.32} ${H-5}`,
+    `M ${W*0.6} 20 Q ${W*0.63} 45 ${W*0.61} 65`,
+    `M ${W-60} ${H-50} Q ${W-40} ${H-30} ${W-45} ${H-10}`,
   ];
   return cracks.map(d =>
-    `<path d="${d}" stroke="rgba(40,30,20,0.25)" stroke-width="1.2" fill="none" stroke-linecap="round"/>`
+    `<path d="${d}" stroke="rgba(20,15,10,0.45)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
   ).join("\n");
 }
 
@@ -108,31 +106,35 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
   let y = 0;
 
   const getCJKFont = () => lang === "zh" ? "NotoSerifSC" : "NotoSerifJP";
-
   const getFontName = (text) => {
     if (hasCJK(text)) return getCJKFont();
     if (hasKorean(text)) return baseFontName;
     return "NotoSerif";
   };
 
+  const stoneFilter = isStone ? ` filter="url(#engrave)"` : "";
+
   const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
     const fontName = getFontName(text);
-    const filter = isStone ? ` filter="url(#engrave)"` : "";
-    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}"${filter}>${esc(text)}</text>`);
+    els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}"${stoneFilter}>${esc(text)}</text>`);
   };
 
-  const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
+  const line = (y1, w=1) => {
+    const color = isStone ? "rgba(20,15,10,0.5)" : e.accent;
+    els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${color}" stroke-width="${w}"/>`);
+  };
 
   const paperFontSize = paperName.length > 25 ? 18 : paperName.length > 18 ? 22 : paperName.length > 12 ? 26 : 30;
+  const textColor = isStone ? "#e8e0d0" : e.fg;
 
   y = 50;
-  txt(paperName, W/2, y, paperFontSize, "bold", e.fg, "middle");
+  txt(paperName, W/2, y, paperFontSize, "bold", textColor, "middle");
   y += 8; line(y, 2); y += 14;
-  txt(e.motto, PAD, y, 9, "normal", e.fg);
-  txt(price, W-PAD, y, 9, "normal", e.fg, "end");
+  txt(e.motto, PAD, y, 9, "normal", textColor);
+  txt(price, W-PAD, y, 9, "normal", textColor, "end");
   y += 6; line(y, 1); y += 14;
-  txt(dateLabel, W/2, y, 11, "normal", e.fg, "middle");
-  txt(e.edition, PAD, y, 9, "normal", e.fg);
+  txt(dateLabel, W/2, y, 11, "normal", textColor, "middle");
+  txt(e.edition, PAD, y, 9, "normal", textColor);
   y += 6; line(y, 2); y += 22;
 
   const hSizes = [22, 16, 13];
@@ -142,10 +144,9 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
     if (i > 0) { y += 4; line(y, 1); y += 16; }
 
     const hFont = getFontName(a.h);
-    const filter = isStone ? ` filter="url(#engrave)"` : "";
     const hLines = wrapText(a.h, 44);
     hLines.forEach(l => {
-      els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]}" font-weight="${hWeights[i]}" fill="${e.fg}" text-anchor="start" font-family="${hFont}"${filter}>${esc(l)}</text>`);
+      els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]}" font-weight="${hWeights[i]}" fill="${textColor}" text-anchor="start" font-family="${hFont}"${stoneFilter}>${esc(l)}</text>`);
       y += hSizes[i] + 5;
     });
 
@@ -153,7 +154,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
       const hkFont = getFontName(a.hk);
       const hkLines = wrapText(`(${a.hk})`, 24);
       hkLines.forEach(l => {
-        els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]-3}" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${hkFont}" opacity="0.7"${filter}>${esc(l)}</text>`);
+        els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]-3}" font-weight="normal" fill="${textColor}" text-anchor="start" font-family="${hkFont}" opacity="0.7"${stoneFilter}>${esc(l)}</text>`);
         y += hSizes[i] + 1;
       });
       y += 4;
@@ -163,7 +164,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
       const bFont = getFontName(a.b);
       const bLines = wrapText(a.b, 52);
       bLines.forEach(l => {
-        els.push(`<text x="${PAD}" y="${y}" font-size="11" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${bFont}"${filter}>${esc(l)}</text>`);
+        els.push(`<text x="${PAD}" y="${y}" font-size="11" font-weight="normal" fill="${textColor}" text-anchor="start" font-family="${bFont}"${stoneFilter}>${esc(l)}</text>`);
         y += 16;
       });
     }
@@ -172,7 +173,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
       const bkFont = getFontName(a.bk);
       const bkLines = wrapText(`(${a.bk})`, 28);
       bkLines.forEach(l => {
-        els.push(`<text x="${PAD}" y="${y}" font-size="10" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${bkFont}" opacity="0.65"${filter}>${esc(l)}</text>`);
+        els.push(`<text x="${PAD}" y="${y}" font-size="10" font-weight="normal" fill="${textColor}" text-anchor="start" font-family="${bkFont}" opacity="0.65"${stoneFilter}>${esc(l)}</text>`);
         y += 15;
       });
       y += 4;
@@ -180,38 +181,44 @@ function buildSvg(params, myeongjoData, garamData, notoData, cjkJpData, cjkScDat
   });
 
   y += 12; line(y, 1); y += 14;
-  txt(e.footer, W/2, y, 8, "normal", e.fg, "middle");
+  txt(e.footer, W/2, y, 8, "normal", textColor, "middle");
   y += 24;
 
-  // 돌 텍스처 필터 및 균열
-  const stoneExtras = isStone ? `
-  <defs>
-    <filter id="engrave" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="1" dy="1" stdDeviation="0.8" flood-color="rgba(255,255,255,0.3)"/>
-      <feDropShadow dx="-0.5" dy="-0.5" stdDeviation="0.5" flood-color="rgba(0,0,0,0.5)"/>
+  const stoneDefs = isStone ? `
+    <filter id="engrave">
+      <feDropShadow dx="1.5" dy="1.5" stdDeviation="0.6" flood-color="rgba(255,255,255,0.25)"/>
+      <feDropShadow dx="-1" dy="-1" stdDeviation="0.6" flood-color="rgba(0,0,0,0.6)"/>
     </filter>
-    <filter id="stone-noise">
-      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" result="noise"/>
-      <feColorMatrix type="saturate" values="0" in="noise" result="grayNoise"/>
-      <feBlend in="SourceGraphic" in2="grayNoise" mode="multiply" result="blend"/>
-      <feComponentTransfer in="blend">
-        <feFuncA type="linear" slope="0.12"/>
-      </feComponentTransfer>
-    </filter>
-  </defs>
-  <rect width="${W}" height="${y}" filter="url(#stone-noise)" fill="#6a6058"/>
-  ${stoneCracks(W, y)}` : "";
+    <filter id="stone-tex">
+      <feTurbulence type="turbulence" baseFrequency="0.04 0.06" numOctaves="4" seed="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>` : "";
+
+  const stoneOverlay = isStone ? `
+    <rect width="${W}" height="${y}" fill="url(#stoneGrad)" opacity="0.3"/>
+    ${stoneCracks(W, y)}` : "";
+
+  const stoneGrad = isStone ? `
+    <linearGradient id="stoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9a9288;stop-opacity:1"/>
+      <stop offset="40%" style="stop-color:#6a6460;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#8a8278;stop-opacity:1"/>
+    </linearGradient>` : "";
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${y}">
-  <defs><style>
-    @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
-    @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
-    @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
-    @font-face { font-family: "NotoSerifJP"; src: url("data:font/truetype;base64,${cjkJpData.toString("base64")}"); }
-    @font-face { font-family: "NotoSerifSC"; src: url("data:font/truetype;base64,${cjkScData.toString("base64")}"); }
-  </style></defs>
+  <defs>
+    <style>
+      @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
+      @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
+      @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
+      @font-face { font-family: "NotoSerifJP"; src: url("data:font/truetype;base64,${cjkJpData.toString("base64")}"); }
+      @font-face { font-family: "NotoSerifSC"; src: url("data:font/truetype;base64,${cjkScData.toString("base64")}"); }
+    </style>
+    ${stoneGrad}
+    ${stoneDefs}
+  </defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
-  ${stoneExtras}
+  ${stoneOverlay}
   ${els.join("\n  ")}
 </svg>`;
 }
