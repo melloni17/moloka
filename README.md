@@ -138,3 +138,98 @@ GET /api/report
 - 캐시: 24시간 (`Cache-Control: public, max-age=86400`)
 - 기원전 날짜: `-YYYY-MM-DD` 형식 사용
 - 한자 포함 시 `lang=ja` (일본/한국 한자) 또는 `lang=zh` (중국 간체) 지정 권장
+
+- ---
+
+## 🎨 커스터마이징 가이드
+
+### 시대별 배경색 변경
+`api/newspaper.js` 에서 `ERA` 객체 수정:
+
+```javascript
+c19: { bg:"#f0e6cc", ... }  // bg 값을 원하는 색상으로 변경
+```
+
+### 기본 신문사명 변경
+```javascript
+c19: { defaultPaper:"Le Moniteur Universel", ... }  // 원하는 신문사명으로 변경
+```
+
+### 시대 구분 연도 변경
+`api/newspaper.js` 에서 `getEra` 함수 수정:
+
+```javascript
+function getEra(y) {
+  if (y <= 0) return "bc";       // 기원전
+  if (y <= 499) return "ancient"; // 고대 끝 연도 조정
+  if (y <= 1499) return "medieval";
+  ...
+}
+```
+
+### 리포트 색상 변경
+`api/report.js` 에서 색상 변수 수정:
+
+```javascript
+const CYAN = '#5eead4';   // 주요 색상
+const BG = '#333333';     // 배경색
+const WHITE = '#cbd5e1';  // 본문 색상
+const RED = '#ff4444';    // 위험 색상
+const YELLOW = '#ffd600'; // 경고 색상
+const GREEN = '#00ff88';  // 안전 색상
+```
+
+### 폰트 교체
+1. `api` 폴더에 새 폰트 파일 업로드
+2. `api/newspaper.js` 하단에서 파일명 수정:
+```javascript
+const myeongjoData = fs.readFileSync(path.join(__dirname, "새폰트.ttf"));
+```
+3. `@font-face` 선언에서 `font-family` 이름도 동일하게 수정
+
+### 새 시대 스타일 추가
+`ERA` 객체에 새 항목 추가:
+```javascript
+ERA.joseon = {
+  bg: "#e8dcc0",
+  fg: "#1a0e00",
+  accent: "#6a4010",
+  defaultPaper: "조선왕조실록",
+  motto: "仁義禮智信",
+  edition: "朝刊",
+  price: "1냥",
+  footer: "朝鮮國 漢城府 發行",
+  font: "myeongjo"
+};
+```
+그리고 `getEra` 함수에 조건 추가.
+
+### 리포트 섹션 타이틀 변경
+`api/report.js` 에서 아래 부분 찾아서 수정:
+
+```javascript
+sectionTitle('[TIMELINE] 변형 연대기');
+sectionTitle('[CAUSALITY] 인과 괴리율');
+sectionTitle('[BUTTERFLY] 나비효과 10년후');
+sectionTitle('[RISK] 생존 위험');
+sectionTitle('[PSYCH] 개체 심리');
+```
+
+원하는 텍스트로 교체하면 돼.
+
+### 리포트 퍼센트 항목 변경
+`api/report.js` 에서 아래 부분 찾아서 수정:
+
+```javascript
+rightValue('[CAUSALITY] 인과 괴리율', `${gap}%`, ...);
+rightValue('[RISK] 생존 위험', `${risk}%`, ...);
+```
+
+### NPC 심리/평가 레이블 변경
+```javascript
+bodyText(`심리: ${npc.psych}`, WHITE, 16, 11);
+bodyText(`평가: ${npc.eval}`, ...);
+```
+
+`심리:` 와 `평가:` 를 원하는 텍스트로 교체하면 돼.
+
