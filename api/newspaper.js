@@ -38,13 +38,8 @@ function formatDate(y, mo, d) {
   return `${y}년 ${KO[mo-1]} ${d}일`;
 }
 
-function hasKorean(text) {
-  return /[가-힣]/.test(text);
-}
-
-function hasCJK(text) {
-  return /[\u4E00-\u9FFF\u3400-\u4DBF\u3000-\u303F]/.test(text);
-}
+function hasKorean(text) { return /[가-힣]/.test(text); }
+function hasCJK(text) { return /[\u4E00-\u9FFF\u3400-\u4DBF\u3000-\u303F\u31F0-\u31FF\uF900-\uFAFF]/.test(text); }
 
 function wrapText(text, maxChars) {
   const words = text.split(" ");
@@ -87,7 +82,6 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   const W = 640, PAD = 36;
   const baseFontName = e.font === "garam" ? "NanumGaram" : "NanumMyeongjo";
   const baseFontData = e.font === "garam" ? garamData : myeongjoData;
-
   const els = [];
   let y = 0;
 
@@ -99,12 +93,8 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
 
   const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
     const fontName = getFontName(text);
-    const escaped = String(text)
-      .normalize("NFC")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;");
+    const escaped = String(text).normalize("NFC")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${escaped}</text>`);
   };
 
@@ -114,37 +104,30 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
 
   y = 50;
   txt(paperName, W/2, y, paperFontSize, "bold", e.fg, "middle");
-  y += 8; line(y, 2);
-  y += 14;
+  y += 8; line(y, 2); y += 14;
   txt(e.motto, PAD, y, 9, "normal", e.fg);
   txt(price, W-PAD, y, 9, "normal", e.fg, "end");
-  y += 6; line(y, 1);
-  y += 14;
+  y += 6; line(y, 1); y += 14;
   txt(dateLabel, W/2, y, 11, "normal", e.fg, "middle");
   txt(e.edition, PAD, y, 9, "normal", e.fg);
-  y += 6; line(y, 2);
-  y += 22;
+  y += 6; line(y, 2); y += 22;
 
   const hSizes = [22, 16, 13];
   const hWeights = [era==="c19"?"900":"bold","bold","bold"];
 
   articles.forEach((a, i) => {
     if (i > 0) { y += 4; line(y, 1); y += 16; }
-
     const hLines = wrapText(a.h, 44);
     hLines.forEach(l => { txt(l, PAD, y, hSizes[i], hWeights[i], e.fg); y += hSizes[i] + 5; });
-
     if (a.hk) {
       const hkLines = wrapText(`(${a.hk})`, 24);
       hkLines.forEach(l => { txt(l, PAD, y, hSizes[i]-3, "normal", e.fg, "start", 0.7); y += hSizes[i] + 1; });
       y += 4;
     }
-
     if (a.b) {
       const bLines = wrapText(a.b, 52);
       bLines.forEach(l => { txt(l, PAD, y, 11, "normal", e.fg); y += 16; });
     }
-
     if (a.bk) {
       const bkLines = wrapText(`(${a.bk})`, 28);
       bkLines.forEach(l => { txt(l, PAD, y, 10, "normal", e.fg, "start", 0.65); y += 15; });
@@ -157,14 +140,12 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   y += 24;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${y}">
-  <defs>
-    <style>
-      @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
-      @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
-      @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
-      @font-face { font-family: "NotoSerifKO"; src: url("data:font/truetype;base64,${notoKoData.toString("base64")}"); }
-    </style>
-  </defs>
+  <defs><style>
+    @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
+    @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
+    @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
+    @font-face { font-family: "NotoSerifKO"; src: url("data:font/truetype;base64,${notoKoData.toString("base64")}"); }
+  </style></defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
   ${els.join("\n  ")}
 </svg>`;
