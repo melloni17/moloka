@@ -86,8 +86,8 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   let y = 0;
 
   const getFontName = (text) => {
-    if (hasKorean(text)) return baseFontName;
     if (hasCJK(text)) return "NotoSerifKO";
+    if (hasKorean(text)) return baseFontName;
     return "NotoSerif";
   };
 
