@@ -61,7 +61,7 @@ function esc(text) {
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
+function buildSvg(params, myeongjoData, garamData, notoData, cjkData) {
   const dateStr = params.date || "1804-12-03";
   const isBC = dateStr.startsWith("-");
   const clean = isBC ? dateStr.slice(1) : dateStr;
@@ -91,7 +91,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   let y = 0;
 
   const getFontName = (text) => {
-    if (hasCJK(text)) return "NotoSerifKO";
+    if (hasCJK(text)) return "NotoSerifCJK";
     if (hasKorean(text)) return baseFontName;
     return "NotoSerif";
   };
@@ -99,16 +99,6 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   const txt = (text, x, yy, size, weight, fill, anchor="start", opacity=1) => {
     const fontName = getFontName(text);
     els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${esc(text)}</text>`);
-  };
-
-  // 원본 텍스트 기준으로 폰트 고정 후 줄바꿈 출력
-  const txtLines = (originalText, lines, x, yy, size, weight, fill, anchor="start", opacity=1) => {
-    const fontName = getFontName(originalText);
-    lines.forEach(l => {
-      els.push(`<text x="${x}" y="${yy}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" font-family="${fontName}" opacity="${opacity}">${esc(l)}</text>`);
-      yy += size + 5;
-    });
-    return yy;
   };
 
   const line = (y1, w=1) => els.push(`<line x1="${PAD}" y1="${y1}" x2="${W-PAD}" y2="${y1}" stroke="${e.accent}" stroke-width="${w}"/>`);
@@ -131,18 +121,16 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
   articles.forEach((a, i) => {
     if (i > 0) { y += 4; line(y, 1); y += 16; }
 
-    // 헤드라인 — 원본 기준 폰트 고정
-    const hLines = wrapText(a.h, 44);
     const hFont = getFontName(a.h);
+    const hLines = wrapText(a.h, 44);
     hLines.forEach(l => {
       els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]}" font-weight="${hWeights[i]}" fill="${e.fg}" text-anchor="start" font-family="${hFont}">${esc(l)}</text>`);
       y += hSizes[i] + 5;
     });
 
-    // 한글 번역 제목
     if (a.hk) {
-      const hkLines = wrapText(`(${a.hk})`, 24);
       const hkFont = getFontName(a.hk);
+      const hkLines = wrapText(`(${a.hk})`, 24);
       hkLines.forEach(l => {
         els.push(`<text x="${PAD}" y="${y}" font-size="${hSizes[i]-3}" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${hkFont}" opacity="0.7">${esc(l)}</text>`);
         y += hSizes[i] + 1;
@@ -150,20 +138,18 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
       y += 4;
     }
 
-    // 원문 본문 — 원본 기준 폰트 고정
     if (a.b) {
-      const bLines = wrapText(a.b, 52);
       const bFont = getFontName(a.b);
+      const bLines = wrapText(a.b, 52);
       bLines.forEach(l => {
         els.push(`<text x="${PAD}" y="${y}" font-size="11" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${bFont}">${esc(l)}</text>`);
         y += 16;
       });
     }
 
-    // 한글 번역 본문
     if (a.bk) {
-      const bkLines = wrapText(`(${a.bk})`, 28);
       const bkFont = getFontName(a.bk);
+      const bkLines = wrapText(`(${a.bk})`, 28);
       bkLines.forEach(l => {
         els.push(`<text x="${PAD}" y="${y}" font-size="10" font-weight="normal" fill="${e.fg}" text-anchor="start" font-family="${bkFont}" opacity="0.65">${esc(l)}</text>`);
         y += 15;
@@ -181,7 +167,7 @@ function buildSvg(params, myeongjoData, garamData, notoData, notoKoData) {
     @font-face { font-family: "NanumMyeongjo"; src: url("data:font/truetype;base64,${myeongjoData.toString("base64")}"); }
     @font-face { font-family: "NanumGaram"; src: url("data:font/truetype;base64,${baseFontData.toString("base64")}"); }
     @font-face { font-family: "NotoSerif"; src: url("data:font/truetype;base64,${notoData.toString("base64")}"); }
-    @font-face { font-family: "NotoSerifKO"; src: url("data:font/truetype;base64,${notoKoData.toString("base64")}"); }
+    @font-face { font-family: "NotoSerifCJK"; src: url("data:font/opentype;base64,${cjkData.toString("base64")}"); }
   </style></defs>
   <rect width="${W}" height="${y}" fill="${e.bg}"/>
   ${els.join("\n  ")}
@@ -193,8 +179,8 @@ module.exports = async (req, res) => {
     const myeongjoData = fs.readFileSync(path.join(__dirname, "NanumMyeongjo.ttf"));
     const garamData = fs.readFileSync(path.join(__dirname, "NanumGaram.ttf"));
     const notoData = fs.readFileSync(path.join(__dirname, "NotoSerif.ttf"));
-    const notoKoData = fs.readFileSync(path.join(__dirname, "NotoSerif-ko.ttf"));
-    const svg = buildSvg(req.query, myeongjoData, garamData, notoData, notoKoData);
+    const cjkData = fs.readFileSync(path.join(__dirname, "NotoSerifCJKjp-Regular.otf"));
+    const svg = buildSvg(req.query, myeongjoData, garamData, notoData, cjkData);
     const resvg = new Resvg(svg, {
       font: {
         loadSystemFonts: false,
@@ -202,7 +188,7 @@ module.exports = async (req, res) => {
           path.join(__dirname, "NanumMyeongjo.ttf"),
           path.join(__dirname, "NanumGaram.ttf"),
           path.join(__dirname, "NotoSerif.ttf"),
-          path.join(__dirname, "NotoSerif-ko.ttf"),
+          path.join(__dirname, "NotoSerifCJKjp-Regular.otf"),
         ]
       }
     });
