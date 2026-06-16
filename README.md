@@ -82,7 +82,7 @@ GET /api/newspaper
 | 폰트 | 라이센스 |
 |------|----------|
 | 나눔명조 | OFL (네이버) |
-| 나눔가람 | OFL (네이버) |
+| 나눔가람연꽃 | OFL (네이버) |
 | Noto Serif | OFL (Google) |
 | Noto Serif JP | OFL (Google) |
 | Noto Serif SC | OFL (Google) |
