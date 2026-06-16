@@ -88,7 +88,40 @@ GET /api/newspaper
 | Noto Serif SC | OFL (Google) |
 
 모든 폰트는 OFL(Open Font License)로 자유롭게 사용 가능합니다.
+---
 
+## 📊 리포트 API
+
+인과율 진단 리포트를 홀로그램 GIF로 생성합니다.
+
+### 엔드포인트
+GET /api/report
+
+### 파라미터
+
+| 파라미터 | 필수 | 설명 | 예시 |
+|----------|------|------|------|
+| `timeline1` | ❌ | 변형 연대기 1번 | `나폴레옹 황제 즉위` |
+| `timeline2` | ❌ | 변형 연대기 2번 | `삼각동맹 구상 완료` |
+| `timeline3` | ❌ | 변형 연대기 3번 | `서신 발송 성공` |
+| `gap` | ❌ | 인과 괴리율 (숫자만) | `47` |
+| `butterfly` | ❌ | 나비효과 10년후 | `유럽 세력균형 재편` |
+| `risk` | ❌ | 생존 위험도 (숫자만) | `31` |
+| `riskreason` | ❌ | 위험 책정 사유 | `전장 노출 빈도 높음` |
+| `risknet` | ❌ | 자원 차감 후 순위험 | `18` |
+| `npc1name` | ❌ | NPC 이름 | `알렉산드르` |
+| `npc1psych` | ❌ | NPC 심리 상태 | `유저에게 종속된 마음` |
+| `npc1eval` | ❌ | 관리자 시점 평가 | `이탈률 없음. 케어 미흡시 잠적 가능` |
+| `npc2name`, `npc2psych`, `npc2eval` | ❌ | 2번 NPC | - |
+| `npc3name`, `npc3psych`, `npc3eval` | ❌ | 3번 NPC | - |
+
+### 예시 URL
+/api/report?timeline1=나폴레옹황제즉위&timeline2=삼각동맹구상완료&gap=47&butterfly=유럽세력균형러시아주도재편&risk=31&riskreason=전장노출빈도높음&risknet=18&npc1name=알렉산드르&npc1psych=유저에게종속된마음&npc1eval=이탈률없음케어미흡시잠적가능
+
+### 응답 형식
+- 이미지 형식: `image/gif`
+- 애니메이션: 글리치 + 스캔라인 효과
+- 캐시: 1시간 (`Cache-Control: public, max-age=3600`)
 ---
 
 ## 🛠️ 기술 스택
